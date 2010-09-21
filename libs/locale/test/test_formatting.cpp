@@ -12,7 +12,7 @@
 
 #include <boost/locale/formatting.hpp>
 #include <boost/locale/format.hpp>
-#include <boost/locale/time_zone.hpp>
+#include <boost/locale/date_time.hpp>
 #include <boost/locale/generator.hpp>
 #include "test_locale.hpp"
 #include "test_locale_tools.hpp"
@@ -30,7 +30,6 @@ using namespace boost::locale;
 #endif
 
 #ifdef TEST_DEBUG
-#define BOOST_NO_STD_WSTRING
 #undef BOOST_HAS_CHAR16_T
 #undef BOOST_HAS_CHAR32_T
 #define TESTEQ(x,y) do { std::cerr << "["<<x << "]!=\n[" << y <<"]"<< std::endl; TEST((x)==(y)); } while(0)
@@ -337,19 +336,17 @@ void test_format(std::string charset="UTF-8")
 int main()
 {
     try {
-        boost::locale::time_zone::global(boost::locale::time_zone("GMT+4:00"));
+        boost::locale::time_zone::global("GMT+4:00");
         std::cout << "Testing char, UTF-8" << std::endl;
         test_manip<char>();
         test_format<char>();
-        std::cout << "Testing char, ISO-8859-1" << std::endl;
-        test_manip<char>("ISO-8859-1");
-        test_format<char>("ISO-8859-1");
+        std::cout << "Testing char, ISO8859-1" << std::endl;
+        test_manip<char>("ISO8859-1");
+        test_format<char>("ISO8859-1");
 
-        #ifndef BOOST_NO_STD_WSTRING
         std::cout << "Testing wchar_t" << std::endl;
         test_manip<wchar_t>();
         test_format<wchar_t>();
-        #endif
 
         #ifdef BOOST_HAS_CHAR16_T
         std::cout << "Testing char16_t" << std::endl;

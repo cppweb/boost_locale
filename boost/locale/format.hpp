@@ -17,7 +17,6 @@
 #include <boost/locale/formatting.hpp>
 
 #include <sstream>
-#include <iostream>
 
 
 namespace boost {
@@ -99,7 +98,7 @@ namespace boost {
     
             class BOOST_LOCALE_DECL format_parser  {
             public:
-                format_parser(std::ios_base &ios);
+                format_parser(std::ios_base &ios,void *,void (*imbuer)(void *,std::locale const &));
                 ~format_parser();
                 
                 unsigned get_posision();
@@ -111,11 +110,12 @@ namespace boost {
                 {
                     if(key=="ftime" || key=="strftime") {
                         as::strftime(ios_);
-                        ext_pattern(ios_,flags::datetime_pattern,value);
+                        ios_info::get(ios_).date_time_pattern(value);
                     }
                 }
                 void restore();
             private:
+                void imbue(std::locale const &);
                 format_parser(format_parser const &);
                 void operator=(format_parser const &);
 
@@ -243,7 +243,7 @@ namespace boost {
             {
                 string_type format;
                 if(translate_)
-                    format = message_.str<CharType>(out.getloc(),ext_value(out,flags::domain_id));
+                    format = message_.str<CharType>(out.getloc(),ios_info::get(out).domain_id());
                 else
                     format = format_;
                
@@ -284,9 +284,8 @@ namespace boost {
                         continue;
                     }
                     pos++;
-                   
-                    
-                    details::format_parser fmt(out);
+                  
+                    details::format_parser fmt(out,reinterpret_cast<void *>(&out),&basic_format::imbue_locale);
 
                     while(pos < size) { 
                         std::string key;
@@ -333,8 +332,9 @@ namespace boost {
                             }
                         }
 
-                        if(use_svalue)
+                        if(use_svalue) {
                             fmt.set_one_flag(key,svalue);
+                        }
                         else 
                             fmt.set_flag_with_str(key,value);
                         
@@ -383,6 +383,11 @@ namespace boost {
                     return parameters_[id];
             }
 
+            static void imbue_locale(void *ptr,std::locale const &l)
+            {
+                reinterpret_cast<stream_type *>(ptr)->imbue(l);
+            }
+
 
 
             static unsigned const base_params_ = 8;
@@ -415,12 +420,10 @@ namespace boost {
         ///
         typedef basic_format<char> format;
 
-        #ifndef BOOST_NO_STD_WSTRING
         ///
         /// Definiton of wchar_t based format
         ///
         typedef basic_format<wchar_t> wformat;
-        #endif
 
         #ifdef BOOST_HAS_CHAR16_T
         ///
